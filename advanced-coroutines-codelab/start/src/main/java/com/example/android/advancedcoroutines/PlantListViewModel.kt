@@ -16,12 +16,9 @@
 
 package com.example.android.advancedcoroutines
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.switchMap
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 /**
@@ -57,18 +54,18 @@ class PlantListViewModel internal constructor(
     /**
      * The current growZone selection.
      */
-    private val growZone = MutableLiveData<GrowZone>(NoGrowZone)
+    private val growZone = MutableStateFlow<GrowZone>(NoGrowZone) // just live hot observables, these don't need to be collected/subscribed to emit
 
     /**
      * A list of plants that updates based on the current filter.
      */
-    val plants: LiveData<List<Plant>> = growZone.switchMap { growZone ->
+    val plantsUsingFlow: LiveData<List<Plant>> = growZone.flatMapLatest{ growZone ->
         if (growZone == NoGrowZone) {
-            plantRepository.plants
+            plantRepository.plantsFlow
         } else {
-            plantRepository.getPlantsWithGrowZone(growZone)
+            plantRepository.getPlantsWithGrowZoneFlow(growZone)
         }
-    }
+    }.asLiveData()
 
     init {
         // When creating a new ViewModel, clear the grow zone and perform any related udpates
