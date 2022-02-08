@@ -63,6 +63,11 @@ class PlantRepository private constructor(
      */
     fun getPlantsWithGrowZoneFlow(growZoneNumber: GrowZone): Flow<List<Plant>> {
         return plantDao.getPlantsWithGrowZoneNumberFlow(growZoneNumber.number)
+            .map {
+                plantList ->
+                val sortOrder = plantsListSortOrderCache.getOrAwait()
+                plantList.applyMainSafeSort(sortOrder)
+            }
     }
 
 
